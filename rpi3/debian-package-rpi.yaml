@@ -1,5 +1,7 @@
 {{- $firmware_version := or .firmware_version "1.20180919" -}}
-{{- $image := or .image "debian-rpi3bplus.img" -}}
+{{- $suite := or .suite "stretch" -}}
+{{- $ospack := or .ospack (printf "debian-pack-rpi-%s-arm64" $suite) -}}
+{{- $pack := or .pack "true" -}}
 
 architecture: arm64
 
@@ -12,14 +14,13 @@ actions:
     name: firmware # name for usage directory with unpacked content in other actions
 
   - action: debootstrap
-    suite: buster
+    suite: {{ $suite }}
     components:
       - main
     mirror: https://deb.debian.org/debian
     variant: minbase
 
   - action: apt
-    description: Install extra packages
     packages:
       - sudo
       - openssh-server
@@ -27,8 +28,17 @@ actions:
       - systemd-sysv
       - linux-image-arm64
       - u-boot-rpi
+
+{{- if eq $suite "stretch" }}
+  - action: overlay
+    description: Add stretch-backports for u-boot-menu
+    source: overlays/stretch
+{{- end }}
+
+  - action: apt
+    recommends: false
+    packages:
       - u-boot-menu
-      - wget
 
   - action: run
     description: Set up user
@@ -67,45 +77,13 @@ actions:
 
   - action: run
     chroot: true
+{{- if eq $suite "stretch" }}
+    command: echo console=ttyS0,115200 > /etc/kernel/cmdline
+{{- else }}
     command: echo console=ttyS1,115200 > /etc/kernel/cmdline
+{{- end }}
 
-  - action: overlay
-    source: overlays/u-boot-menu
-
-  - action: run
-    chroot: true
-    command: u-boot-update
-
-  - action: image-partition
-    imagename: {{ $image }}
-    imagesize: 1GB
-    partitiontype: msdos
-    mountpoints:
-      - mountpoint: /
-        partition: root
-      - mountpoint: /boot/firmware
-        partition: firmware
-        options: [ x-systemd.automount ]
-    partitions:
-      - name: firmware
-        fs: fat32
-        start: 0%
-        end: 64MB
-      - name: root
-        fs: ext4
-        start: 64MB
-        end: 100%
-        flags: [ boot ]
-
-  - action: filesystem-deploy
-    description: Deploying filesystem onto image
-
-  - action: run
-    description: Create block map file
-    postprocess: true
-    command: bmaptool create {{ $image }} > {{ $image }}.bmap
-
-  - action: run
-    description: Compressing final image
-    postprocess: true
-    command: gzip -f {{ $image }}
+{{- if eq $pack "true" }}
+  - action: pack
+    file: {{ $ospack }}.tar.gz
+{{- end }}

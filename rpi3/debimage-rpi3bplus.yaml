@@ -1,6 +1,6 @@
 {{- $firmware_version := or .firmware_version "1.20180919" -}}
-{{- $suite := or .suite "stretch" -}}
-{{- $image := or .image (printf "debian-%s-rpi3.img" $suite) -}}
+{{- $suite := or .suite "buster" -}}
+{{- $image := or .image (printf "debian-%s-rpi3bplus.img" $suite) -}}
 
 architecture: arm64
 
@@ -14,15 +14,7 @@ actions:
       pack: false
 
   - action: overlay
-    source: overlays/u-boot-menu-rpi3b
-
-  - action: run
-    chroot: true
-{{- if eq $suite "stretch" }}
-    command: echo 'U_BOOT_PARAMETERS="ro rootwait console=ttyS0,115200"' >> /etc/default/u-boot
-{{- else}}
-    command: echo 'U_BOOT_PARAMETERS="ro rootwait console=ttyS1,115200"' >> /etc/default/u-boot
-{{- end}}
+    source: overlays/u-boot-menu-rpi3bplus
 
   - action: run
     chroot: true
