@@ -1,0 +1,31 @@
+{{  $architecture := or .architecture "arm64" -}}
+{{- $suite := or .suite "buster" -}}
+{{- $image := or .image (printf "debian-rpi3-weston-test-%s-%s.img" $suite $architecture) -}}
+{{- $firmware_version := or .firmware_version "1.20190925" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: recipe
+    description: debian-rpi3
+    recipe: ../../rpi3/debian-rpi3.yaml
+    variables:
+      architecture: {{ $architecture }}
+      suite: {{ $suite }}
+      image: {{ $image }}
+      firmware_version: {{ $firmware_version }}
+
+  - action: recipe
+    description: Setup Weston
+    recipe: ../../tasks/weston/weston.yaml
+    variables:
+      architecture: {{ $architecture }}
+
+  - action: overlay
+    description: Start weston-editor on boot
+    source: overlays/weston-editor
+
+  - action: run
+    description: Start weston-editor on boot
+    chroot: true
+    command: systemctl enable weston-editor

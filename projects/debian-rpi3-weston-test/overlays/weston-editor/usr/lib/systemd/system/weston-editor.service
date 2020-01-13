@@ -1,0 +1,17 @@
+[Unit]
+Description=Run weston-editor
+After=weston.target
+
+[Service]
+Type=oneshot
+User=user
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=DISPLAY=:1
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/lib/weston/weston-editor
+RemainAfterExit=false
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
