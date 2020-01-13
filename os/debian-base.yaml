@@ -1,6 +1,9 @@
-{{- $suite := or .suite "stretch" -}}
+# generates an archive of a basic Debian filesystem
+
+{{  $suite := or .suite "buster" -}}
 {{- $architecture := or .architecture "amd64" -}}
 {{- $ospack := or .ospack (printf "debian-base-%s-%s" $suite $architecture) -}}
+{{- $pack := or .pack "true" -}}
 
 architecture: {{ $architecture }}
 
@@ -12,5 +15,7 @@ actions:
     mirror: https://deb.debian.org/debian
     variant: minbase
 
+{{- if eq $pack "true" }}
   - action: pack
     file: {{ $ospack }}.tar.gz
+{{- end }}
