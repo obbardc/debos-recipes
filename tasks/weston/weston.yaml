@@ -1,0 +1,32 @@
+# installs Weston and Wayland compositor
+
+{{  $architecture := or .architecture "amd64" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: overlay
+    source: overlays/weston
+
+  - action: apt
+    packages:
+      - acl
+      - libnss-myhostname
+      - locales
+      - vim-tiny
+      - less
+      - weston
+      - dbus-user-session
+      - net-tools
+      - iproute2
+      - udev
+
+  - action: run
+    description: Add debian user to the video group
+    chroot: true
+    command: adduser user video
+
+  - action: run
+    description: Setup wayland compositor
+    chroot: true
+    command: systemctl enable weston
